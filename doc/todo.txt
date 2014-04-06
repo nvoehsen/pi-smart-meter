@@ -1,0 +1,9 @@
+- Performance auf dem Pi optimieren (mehr fps)
+- Bilderkennung optimieren
+- Skript aufraeumen
+- Skript Userinterface
+- Skript Konfiguration auslagern
+- Server-Betrieb des skripts: taeglich log-roll
+- Auswertungen: Drei gute Grafiken
+- Kennzahlen: Kosten des Tags, letzte 5 Min, 20 Min, 1h, 6h, 24h
+- webservice auf pi

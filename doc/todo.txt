@@ -1,5 +1,10 @@
+- Erkenn-Bugs fixen:
+ -- croppen DONE
+ -- sekunden float DONE
+ -- bilder ausspielen HALF DONE: Funktionalitaet ist da, ausfuehren
+ und Erkennung testen
 - Performance auf dem Pi optimieren (mehr fps)
-- Bilderkennung optimieren
+- Bilderkennung optimieren (Hintergrund subtrahieren)
 - Skript aufraeumen
 - Skript Userinterface
 - Skript Konfiguration auslagern

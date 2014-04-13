@@ -52,16 +52,47 @@ def frame_writeout(f, mask):
     #    cv2.imshow("frameWindow", res)
     #cv2.waitKey(int(1/fps *1000)) # time to wait between frames, in mSec
 
+class ModelState:
+    def __init__(self):
+        self.currentlyred = 0
+        self.conseczeros  = 0
+        self.changed = 0
+        
+    def update(self, i):
+        self.updatezeros(i)
+        self.updatered(i)
+    def updatezeros(self, i):
+        if i<1:
+            self.conseczeros += 1
+        else:
+            self.conseczeros=0
+    def updatered(self, i):
+        if self.currentlyred == 0 and i > 10 :
+            self.currentlyred = 1
+            self.changed = 1
+        elif self.currentlyred == 1 and self.conseczeros > 2 : 
+            self.currentlyred = 0
+            self.changed = -1
+        else:
+            self.changed = 0
+        
 
+            
+
+        
 # fileonly nFrames = int(vidFile.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) 
    # one good way of namespacing legacy openCV: cv2.cv.*
 # fileonly print "frame number: %s" %nFrames
 #    fps = vidFile.get(cv2.cv.CV_CAP_PROP_FPS)
 #    print "FPS value: %s" %fps
 framenum=0
-currentlyred=0
+
 lasttime = datetime.now()
 ret, frame = readFrame() 
+
+disc = ModelState()
+
+print disc.currentlyred
 
 while ret:  
 
@@ -85,10 +116,9 @@ while ret:
 
 
     currtime = datetime.now()
-    if currentlyred == 0 and perc > 5 :
-        currentlyred = 1
-    elif currentlyred == 1 and perc < 1 : 
-        currentlyred = 0
+    disc.update(perc)
+    
+    if disc.changed == -1  :
         delta = currtime - lasttime
         watts =  wattSecPerU / delta.total_seconds()
         print currtime, "; ", watts

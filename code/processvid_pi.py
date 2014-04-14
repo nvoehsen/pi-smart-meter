@@ -2,7 +2,11 @@ import cv2
 import sys
 import numpy as np
 from datetime import datetime, date, time
+# Usage processvid_pi.py DIR [VIDFILENAME]
+# DIR: directory to contain data files
+# VIDFILENAME: optional video file name
 
+# constant declaration
 # 75 Umdrehungen sind 1 kWh
 # 1/75 kWh in Ws =>(Wolfram Alpha) 48000 Ws
 
@@ -12,11 +16,15 @@ cropToY   = 200
 lower_red = np.array([0,180,50])
 upper_red = np.array([60,255,255])
 
+dir = sys.argv[1]
+print "Directory: {}".format(dir)
+
+
 try:
-    if len(sys.argv) < 2 :
+    if len(sys.argv) < 3 :
         vidFile = cv2.VideoCapture(0)
     else :
-        vidFile = cv2.VideoCapture(sys.argv[1])
+        vidFile = cv2.VideoCapture(sys.argv[2])
 except:
     print "problem opening input stream"
     sys.exit(1)
@@ -24,6 +32,14 @@ if not vidFile.isOpened():
     print "capture stream not open"
     sys.exit(1)
 
+def getFileName():
+    dtime = datetime.now()
+    return dir + "/" + dtime.strftime("%Y-%m-%d_%H%M%S") + "_capture.csv"
+    
+def openFile():
+    filename = getFileName()
+    return open(filename, 'a')
+    
 def readFrame():
     result, fullframe = vidFile.read();
     retframe = fullframe[cropFromY:cropToY,:] if result else fullframe 
@@ -92,7 +108,9 @@ ret, frame = readFrame()
 
 disc = ModelState()
 
-print disc.currentlyred
+#print disc.currentlyred
+
+outfile = openFile()
 
 while ret:  
 
@@ -106,24 +124,37 @@ while ret:
 
     mask = cv2.inRange(hsv, lower_red, upper_red)
  
-    #frame_writeout(frame, mask)
+    frame_writeout(frame, mask)
 
     mheight, mwidth = mask.shape
  
     framenum += 1 
     perc = mask.sum() / mheight / mwidth
-    print framenum, "; ", perc
 
+    
+    #    outfile.write("{0};{1}\n".format(repr(framenum), repr(perc) ))
 
     currtime = datetime.now()
     disc.update(perc)
-    
+
+    #daily logroll
+    if currtime.day != lasttime.day :
+        outfile.close();
+        outfile = openFile();
+
+    #default outputs
+    timestring = ""
+    wattstring = ""
+        
+    #detected red:
     if disc.changed == -1  :
         delta = currtime - lasttime
         watts =  wattSecPerU / delta.total_seconds()
-        print currtime, "; ", watts
         lasttime = currtime 
-
+        timestring = str(currtime)
+        wattstring = repr(watts)
+    
+    outfile.write( "{0};{1};{2};{3}\n".format( str(framenum),                                               repr(perc), timestring, wattstring) )
 
     ret, frame = readFrame() # read next frame, get next return code
 

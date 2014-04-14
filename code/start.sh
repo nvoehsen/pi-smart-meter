@@ -1,4 +1,4 @@
-FILE=data/`date +%F_%H%M%S`_capture.csv
-echo "Starting python process to $FILE"
-nohup python code/processvid_pi.py > $FILE &
+DIR="/home/pi/data"
+echo "Starting python process in dir $DIR"
+nohup python code/processvid_pi.py $DIR &
 echo "Started."

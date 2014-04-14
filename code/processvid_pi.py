@@ -11,9 +11,9 @@ from datetime import datetime, date, time
 # 1/75 kWh in Ws =>(Wolfram Alpha) 48000 Ws
 
 wattSecPerU = 48000.0
-cropFromY = 90
-cropToY   = 200
-lower_red = np.array([0,180,50])
+cropFromY = 170
+cropToY   = 250
+lower_red = np.array([0,160,50])
 upper_red = np.array([60,255,255])
 
 dir = sys.argv[1]
@@ -124,7 +124,7 @@ while ret:
 
     mask = cv2.inRange(hsv, lower_red, upper_red)
  
-    frame_writeout(frame, mask)
+    #    frame_writeout(frame, mask)
 
     mheight, mwidth = mask.shape
  

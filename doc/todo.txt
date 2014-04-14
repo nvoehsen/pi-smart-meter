@@ -1,20 +1,15 @@
 - Erkenn-Bugs fixen:
  -- DONE croppen 
  -- DONE sekunden float 
- -- BEGIN bilder ausspielen: Funktionalitaet ist da, ausfuehren
+ -- LATER bilder ausspielen: Funktionalitaet ist da, ausfuehren
  und Erkennung testen
-- Performance auf dem Pi optimieren (mehr fps)
+DONE:Cropping Performance auf dem Pi optimieren (mehr fps)
 - Bilderkennung optimieren (Hintergrund subtrahieren)
-- Skript aufraeumen
+DONE Skript aufraeumen
 - Skript Userinterface
 - Skript Konfiguration auslagern
 - Server-Betrieb des skripts: taeglich log-roll
 - Auswertungen: Drei gute Grafiken
 - Kennzahlen: Kosten des Tags, letzte 5 Min, 20 Min, 1h, 6h, 24h
 - webservice auf pi
-
-
-scp -r nik@192.168.0.42:bastel/2014-03-29_Pi_hacking/code .
-
-nohup python code/processvid_pi.py > 2014-04-09_capture.csv &
 

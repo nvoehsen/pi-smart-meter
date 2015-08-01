@@ -2,17 +2,22 @@ import cv2
 import sys
 import numpy as np
 from datetime import datetime, date, time
+
 # Usage processvid_pi.py DIR [VIDFILENAME]
 # DIR: directory to contain data files
 # VIDFILENAME: optional video file name
 
 # constant declaration
-# 75 Umdrehungen sind 1 kWh
+# 75 revolutions are 1 kWh
 # 1/75 kWh in Ws =>(Wolfram Alpha) 48000 Ws
 
 wattSecPerU = 48000.0
+
+# The crop values are needed, otherwise processing takes much too long on PI
+# These are extracted by hand from a sample frame grab
 cropFromY = 170
 cropToY   = 250
+# The red mark is recognized by a color between these values
 lower_red = np.array([0,160,50])
 upper_red = np.array([60,255,255])
 
@@ -39,7 +44,8 @@ def getFileName():
 def openFile():
     filename = getFileName()
     return open(filename, 'a')
-    
+
+#get cropped frame from video device    
 def readFrame():
     result, fullframe = vidFile.read();
     retframe = fullframe[cropFromY:cropToY,:] if result else fullframe 
@@ -59,7 +65,8 @@ def frame_something(f):
     # senkrecht: 100, 200
     framecpy[:,100] = lightgray
     framecpy[:,200] = lightgray
-        
+
+#dump frame and mask to file            
 def frame_writeout(f, mask):
     res  = cv2.bitwise_and(f,f, mask= 255 - mask)
     dat = datetime.now() 
@@ -67,6 +74,13 @@ def frame_writeout(f, mask):
  
     #    cv2.imshow("frameWindow", res)
     #cv2.waitKey(int(1/fps *1000)) # time to wait between frames, in mSec
+
+
+# To improve the detection of the red mark passing through, the past state of the mark detection is used
+# An instance of this class holds information about previously detected disk states
+# currentlyred: Is the mark currently visible
+# conseczeros:  How many frames with no mark were there previously
+# changed:      Has the mark status changed? 1: mark appeared 0: no change -1: mark disappeared
 
 class ModelState:
     def __init__(self):
@@ -77,11 +91,13 @@ class ModelState:
     def update(self, i):
         self.updatezeros(i)
         self.updatered(i)
+        
     def updatezeros(self, i):
         if i<1:
             self.conseczeros += 1
         else:
             self.conseczeros=0
+            
     def updatered(self, i):
         if self.currentlyred == 0 and i > 10 :
             self.currentlyred = 1
@@ -114,43 +130,41 @@ outfile = openFile()
 
 while ret:  
 
+    #transform to hsv
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Rot ist bei [0,0,255] 
-    # Grau / farblos ist auf der Achse [ i, i, i]
-    # Die Roete wird definiert durch die Projektion auf die Achse i,i,i
-    # Die Projektion ist entlang von [ -1, -1, 2 ] 
-    # Skalarprodukt damit positiv => rot
-
+    #select all red pixels in mask
     mask = cv2.inRange(hsv, lower_red, upper_red)
- 
-    #    frame_writeout(frame, mask)
 
+    # calculate perc, i.e. the mean of the mask pixels
     mheight, mwidth = mask.shape
- 
-    framenum += 1 
     perc = mask.sum() / mheight / mwidth
 
-    
-    #    outfile.write("{0};{1}\n".format(repr(framenum), repr(perc) ))
-
-    currtime = datetime.now()
+    # update disc state with perc
     disc.update(perc)
 
-    #daily logroll
-    if currtime.day != lasttime.day :
-        outfile.close();
-        outfile = openFile();
+    # for debugging uncomment, writes all capture files to disk
+    #    frame_writeout(frame, mask)
 
     #default outputs
     timestring = ""
     wattstring = ""
+
+    framenum += 1 
+    currtime = datetime.now()
         
     #detected red:
     if disc.changed == -1  :
+        #daily logroll
+        if currtime.day != lasttime.day :
+            outfile.close();
+            outfile = openFile();
+        #calc current watts using time since last passage of the mark 
         delta = currtime - lasttime
         watts =  wattSecPerU / delta.total_seconds()
-        lasttime = currtime 
+        #reset timestamp
+        lasttime = currtime
+        #set strings for output
         timestring = str(currtime)
         wattstring = repr(watts)
     

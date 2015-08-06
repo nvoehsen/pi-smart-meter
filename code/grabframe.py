@@ -3,26 +3,20 @@ import sys
 import numpy as np
 from datetime import datetime, date, time
 
-# Usage grabframe.py DIR [VIDFILENAME]
-# DIR: target directory for image
+# Usage grabframe.py [VIDFILENAME]
 # VIDFILENAME: optional video file name
-
+# creates two jpgs in current dir
 
 # The red mark is recognized by a color between these values
 lower_red = np.array([0,160,50])
 upper_red = np.array([60,255,255])
 
 
-
-dir = sys.argv[1]
-print "Directory: {}".format(dir)
-
-
 try:
-    if len(sys.argv) < 3 :
+    if len(sys.argv) < 2 :
         vidFile = cv2.VideoCapture(0)
     else :
-        vidFile = cv2.VideoCapture(sys.argv[2])
+        vidFile = cv2.VideoCapture(sys.argv[1])
 except:
     print "problem opening input stream"
     sys.exit(1)
@@ -34,7 +28,7 @@ if not vidFile.isOpened():
 result, frame = vidFile.read();
 
 #write to disk
-dat = datetime.now() 
+dat = datetime.now().strftime("%Y%m%d%H%M%S") 
 cv2.imwrite("frame-orig-%s.jpg" %dat, frame)      
 
 #transform to hsv

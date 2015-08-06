@@ -40,18 +40,18 @@ if not vidFile.isOpened():
 def getFileName():
     dtime = datetime.now()
     return dir + "/" + dtime.strftime("%Y-%m-%d_%H%M%S") + "_capture.csv"
-    
+
 def openFile():
     filename = getFileName()
     return open(filename, 'a')
 
-#get cropped frame from video device    
+#get cropped frame from video device
 def readFrame():
     result, fullframe = vidFile.read();
-    retframe = fullframe[cropFromY:cropToY,:] if result else fullframe 
+    retframe = fullframe[cropFromY:cropToY,:] if result else fullframe
     return result, retframe
 
-    
+
 def frame_something(f):
     framecpy = f.copy()
     px = frame[100,100]
@@ -66,12 +66,12 @@ def frame_something(f):
     framecpy[:,100] = lightgray
     framecpy[:,200] = lightgray
 
-#dump frame and mask to file            
+#dump frame and mask to file
 def frame_writeout(f, mask):
     res  = cv2.bitwise_and(f,f, mask= 255 - mask)
-    dat = datetime.now() 
-    cv2.imwrite("frame-%s.jpg" %dat, res)      
- 
+    dat = datetime.now()
+    cv2.imwrite("frame-%s.jpg" %dat, res)
+
     #    cv2.imshow("frameWindow", res)
     #cv2.waitKey(int(1/fps *1000)) # time to wait between frames, in mSec
 
@@ -87,32 +87,32 @@ class ModelState:
         self.currentlyred = 0
         self.conseczeros  = 0
         self.changed = 0
-        
+
     def update(self, i):
         self.updatezeros(i)
         self.updatered(i)
-        
+
     def updatezeros(self, i):
         if i<1:
             self.conseczeros += 1
         else:
             self.conseczeros=0
-            
+
     def updatered(self, i):
         if self.currentlyred == 0 and i > 10 :
             self.currentlyred = 1
             self.changed = 1
-        elif self.currentlyred == 1 and self.conseczeros > 2 : 
+        elif self.currentlyred == 1 and self.conseczeros > 2 :
             self.currentlyred = 0
             self.changed = -1
         else:
             self.changed = 0
-        
 
-            
 
-        
-# fileonly nFrames = int(vidFile.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)) 
+
+
+
+# fileonly nFrames = int(vidFile.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
    # one good way of namespacing legacy openCV: cv2.cv.*
 # fileonly print "frame number: %s" %nFrames
 #    fps = vidFile.get(cv2.cv.CV_CAP_PROP_FPS)
@@ -120,7 +120,7 @@ class ModelState:
 framenum=0
 
 lasttime = datetime.now()
-ret, frame = readFrame() 
+ret, frame = readFrame()
 
 disc = ModelState()
 
@@ -128,7 +128,7 @@ disc = ModelState()
 
 outfile = openFile()
 
-while ret:  
+while ret:
 
     #transform to hsv
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -150,16 +150,16 @@ while ret:
     timestring = ""
     wattstring = ""
 
-    framenum += 1 
+    framenum += 1
     currtime = datetime.now()
-        
+
     #detected red:
     if disc.changed == -1  :
         #daily logroll
         if currtime.day != lasttime.day :
             outfile.close();
             outfile = openFile();
-        #calc current watts using time since last passage of the mark 
+        #calc current watts using time since last passage of the mark
         delta = currtime - lasttime
         watts =  wattSecPerU / delta.total_seconds()
         #reset timestamp
@@ -167,9 +167,7 @@ while ret:
         #set strings for output
         timestring = str(currtime)
         wattstring = repr(watts)
-    
-    outfile.write( "{0};{1};{2};{3}\n".format( str(framenum),                                               repr(perc), timestring, wattstring) )
+
+    outfile.write( "{0};{1};{2};{3}\n".format( str(framenum), repr(perc), timestring, wattstring) )
 
     ret, frame = readFrame() # read next frame, get next return code
-
-
